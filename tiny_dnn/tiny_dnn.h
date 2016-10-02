@@ -72,6 +72,11 @@
 
 #ifdef CNN_USE_CAFFE_CONVERTER
 // experimental / require google protobuf
+
+#ifdef STRICT
+#undef STRICT // workaround for windows user / #define STRICT 1 in windows.h would break compiling caffe.proto.h
+#endif
+
 #include "tiny_dnn/io/caffe/layer_factory.h"
 #endif
 
