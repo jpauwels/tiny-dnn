@@ -31,7 +31,7 @@
 
 namespace tiny_dnn {
 
-inline std::shared_ptr<network<sequential>>
+inline std::shared_ptr<network<graph>>
 create_net_from_json(const std::string& caffemodeljson, const shape3d& shape = shape3d()) {
     std::string tmp_file_path = unique_path();
 
@@ -45,6 +45,10 @@ create_net_from_json(const std::string& caffemodeljson, const shape3d& shape = s
 
     return model;
 }
+
+/*TEST(caffe_converter, googlenet) {
+    auto net = create_net_from_caffe_prototxt("../../test/caffemodels/bvlc_googlenet/deploy.prototxt");
+}*/
 
 TEST(caffe_converter, rectangle_input) {
     std::string json = R"(
@@ -90,6 +94,10 @@ TEST(caffe_converter, rectangle_input) {
     EXPECT_EQ((*model)[1]->in_shape()[0], shape3d(22*38*96, 1, 1));
     EXPECT_EQ((*model)[1]->out_shape()[0], shape3d(10, 1, 1));
 
+    vec_t dummy(24 * 40 * 1);
+    vec_t res = model->predict(dummy);
+
+    EXPECT_EQ(res.size(), 10 * 1 * 1);
 }
 
 /**
@@ -317,7 +325,13 @@ TEST(caffe_converter, lenet) {
     EXPECT_EQ((*model)[7]->layer_type(), "linear");
 }
 
-TEST(caffe_converter, conv2) {
+
+TEST(caffe_converter, alexnet) {
+    // @todo add testing option to specifying the directory of the model
+    auto net = create_net_from_caffe_prototxt("../../test/caffemodels/bvlc_alexnet/deploy.prototxt");
+
+    // conv->pool->conv->pool->fc->relu->fc->softmax
+    ASSERT_EQ(net->depth(), 23);
 
 }
 
