@@ -697,6 +697,7 @@ private:
 
     friend void construct_graph(network<graph>& graph, const std::vector<std::shared_ptr<layer>>& inputs, const std::vector<std::shared_ptr<layer>>& outputs);
     friend void construct_graph(network<graph>& graph, const std::vector<layer*>& inputs, const std::vector<layer*>& outputs);
+    friend void assign_nodes(network<graph>& graph, const std::vector<std::shared_ptr<layer>>& nodes);
 
     template <typename Error, typename Optimizer, typename OnBatchEnumerate, typename OnEpochEnumerate>
     bool fit(Optimizer&                   optimizer,
@@ -1030,6 +1031,11 @@ inline void construct_graph(network<graph>& graph, const std::vector<std::shared
     std::transform(outputs.begin(), outputs.end(), std::back_inserter(out_ptr), shared2ptr);
 
     graph.net_.construct(in_ptr, out_ptr);
+}
+
+inline void assign_nodes(network<graph>& graph, const std::vector<std::shared_ptr<layer>>& nodes)
+{
+    graph.net_.assign(nodes);
 }
 
 } // namespace tiny_dnn

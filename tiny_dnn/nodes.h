@@ -439,13 +439,18 @@ class graph : public nodes {
         }
 
         for (auto& n : sorted) {
-            nodes_.push_back(n);
+            if (std::find(nodes_.begin(), nodes_.end(), n) == nodes_.end())
+                nodes_.push_back(n);
         }
 
         input_layers_ = input;
         output_layers_ = output;
 
         setup(false);
+    }
+
+    void assign(const std::vector<std::shared_ptr<layer>>& nodes) {
+        for (auto& n : nodes) push_back(n);
     }
 
 private:

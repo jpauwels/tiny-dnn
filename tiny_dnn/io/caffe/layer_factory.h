@@ -44,39 +44,30 @@ namespace tiny_dnn {
 * @param layer [in] netparameter of caffemodel
 * @param data_shape [in] size of input data (width x height x channels)
 */
-inline std::shared_ptr<network<sequential>>
-create_net_from_caffe_net(const caffe::NetParameter& layer, const shape3d& data_shape)
+inline std::shared_ptr<network<graph>>
+create_net_from_caffe_net(const caffe::NetParameter& net_param, const shape3d& data_shape)
 {
-    detail::caffe_layer_vector src_net(layer);
+    detail::caffe_layer_manager caffe_layers(net_param);
     shape_t shape;
 
     if (data_shape.size() > 0) {
-        shape = data_shape;
-    } else {
-        if (layer.input_shape_size() > 0) {
-            // input_shape is deprecated in Caffe
-            // blob dimensions are ordered by number N x channel K x height H x width W
-            int depth  = static_cast<int>(layer.input_shape(0).dim(1));
-            int height = static_cast<int>(layer.input_shape(0).dim(2));
-            int width  = static_cast<int>(layer.input_shape(0).dim(3));
-            shape = shape3d(width, height, depth);
-        }
-        else if (src_net[0].has_input_param()) {
-            // blob dimensions are ordered by number N x channel K x height H x width W
-            int depth  = static_cast<int>(src_net[0].input_param().shape(0).dim(1));
-            int height = static_cast<int>(src_net[0].input_param().shape(0).dim(2));
-            int width  = static_cast<int>(src_net[0].input_param().shape(0).dim(3));
-            shape = shape3d(width, height, depth);
-        }
-        else {
-            throw nn_error("input_shape not found in caffemodel. must specify input shape explicitly");
-        }
+        caffe_layers.register_top_shape("data", data_shape);
+    }
+    else if (net_param.input_shape_size() > 0) {
+        // input_shape is deprecated in Caffe
+        // blob dimensions are ordered by number N x channel K x height H x width W
+        int depth = static_cast<int>(net_param.input_shape(0).dim(1));
+        int height = static_cast<int>(net_param.input_shape(0).dim(2));
+        int width = static_cast<int>(net_param.input_shape(0).dim(3));
+        caffe_layers.register_top_shape("data", shape3d(width, height, depth));
     }
 
-    auto dst_net = std::make_shared<network<sequential>>(layer.name());
+    auto dst_net = std::make_shared<network<graph>>(net_param.name());
 
-    for (size_t i = 0; i < src_net.size(); i++) {
-        auto type = src_net[i].type();
+    std::unordered_map<const caffe::LayerParameter*, std::shared_ptr<layer>> caffe2tiny;
+
+    for (size_t i = 0; i < caffe_layers.size(); i++) {
+        auto type = caffe_layers[i].type();
 
         if (detail::layer_skipped(type)) {
             continue;
@@ -86,15 +77,17 @@ create_net_from_caffe_net(const caffe::NetParameter& layer, const shape3d& data_
             throw nn_error("error: tiny-dnn does not support this layer type:" + type);
         }
 
-        shape_t shape_next = shape;
-        auto layer = detail::create(src_net[i], shape, &shape_next);
+        //shape_t shape_next = shape;
+        auto tiny_layer = detail::create(caffe_layers[i], caffe_layers);
 
-        nn_info("convert " + type + " => " + typeid(*layer).name());
-        nn_info("shape:" + to_string(shape_next));
+        caffe2tiny[&caffe_layers[i]] = tiny_layer;
 
-        *dst_net << layer;
-        shape = shape_next;
+        nn_info("convert " + type + " => " + typeid(*tiny_layer).name());
+
+        //*dst_net << layer;
     }
+
+    caffe_layers.construct_graph(caffe2tiny, *dst_net);
 
     return dst_net;
 }
@@ -106,7 +99,7 @@ create_net_from_caffe_net(const caffe::NetParameter& layer, const shape3d& data_
  * @param layer [in] netparameter of caffemodel
  * @param data_shape [in] size of input data (width x height x channels)
  */
-inline std::shared_ptr<network<sequential>>
+inline std::shared_ptr<network<graph>>
 create_net_from_caffe_protobinary(const std::string& caffebinarymodel, const shape3d& data_shape)
 {
     caffe::NetParameter np;
@@ -120,7 +113,7 @@ create_net_from_caffe_protobinary(const std::string& caffebinarymodel, const sha
  *
  * @param layer [in] netparameter of caffe prototxt
  */
-inline std::shared_ptr<network<sequential>>
+inline std::shared_ptr<network<graph>>
 create_net_from_caffe_prototxt(const std::string& caffeprototxt, const shape3d& shape =shape3d())
 {
     caffe::NetParameter np;
