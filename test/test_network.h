@@ -520,7 +520,7 @@ TEST(network, gradient_check6) { // sigmoid - cross-entropy
 
 TEST(network, gradient_check7) { // leaky-relu - mse
     typedef mse loss_func;
-    typedef leaky_relu activation;
+    typedef leaky_relu<> activation;
 
     auto nn = make_mlp<activation>({ 3, 201, 2 });
 

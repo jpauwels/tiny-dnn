@@ -90,11 +90,12 @@ public:
 
 typedef relu rectified_linear; // for compatibility
 
+template <size_t Numerator=1, size_t Denominator=100>
 class leaky_relu : public function {
 public:
     using function::df;
-    float_t f(const vec_t& v, size_t i) const override { return (v[i] > float_t(0)) ? v[i] : float_t(0.01) * v[i]; }
-    float_t df(float_t y) const override { return y > float_t(0) ? float_t(1) : float_t(0.01); }
+    float_t f(const vec_t& v, size_t i) const override { return (v[i] > float_t(0)) ? v[i] : float_t(Numerator) / float_t(Denominator) * v[i]; }
+    float_t df(float_t y) const override { return y > float_t(0) ? float_t(1) : float_t(Numerator) / float_t(Denominator); }
     std::pair<float_t, float_t> scale() const override { return std::make_pair(float_t(0.1), float_t(0.9)); }
 };
 

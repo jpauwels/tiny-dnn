@@ -108,7 +108,7 @@ CNN_REGISTER_LAYER_WITH_ACTIVATION(layer_type, softmax, layer_name); \
 CNN_REGISTER_LAYER_WITH_ACTIVATION(layer_type, identity, layer_name); \
 CNN_REGISTER_LAYER_WITH_ACTIVATION(layer_type, sigmoid, layer_name); \
 CNN_REGISTER_LAYER_WITH_ACTIVATION(layer_type, relu, layer_name); \
-CNN_REGISTER_LAYER_WITH_ACTIVATION(layer_type, leaky_relu, layer_name); \
+CNN_REGISTER_LAYER_WITH_ACTIVATION(layer_type, leaky_relu<>, layer_name); \
 CNN_REGISTER_LAYER_WITH_ACTIVATION(layer_type, elu, layer_name); \
 CNN_REGISTER_LAYER_WITH_ACTIVATION(layer_type, tan_hp1m2, layer_name)
 
